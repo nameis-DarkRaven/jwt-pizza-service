@@ -2,7 +2,7 @@
 
 [![CI Pipeline](https://github.com/nameis-DarkRaven/jwt-pizza/actions/workflows/ci.yml/badge.svg)](https://github.com/nameis-DarkRaven/jwt-pizza-service/actions/workflows/ci.yml)
 
-![Coverage badge](https://pizza-factory.cs329.click/api/badge/nameis-DarkRaven/jwtpizzaservicecoverage)
+![Coverage badge](https://pizza-factory.cs329.click/api/badge/femilee1/jwtpizzaservicecoverage)
 
 Backend service for making JWT pizzas. This service tracks users and franchises and orders pizzas. All order requests are passed to the JWT Pizza Factory where the pizzas are made.
 
