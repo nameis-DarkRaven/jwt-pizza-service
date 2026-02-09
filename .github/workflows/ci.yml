@@ -57,15 +57,20 @@ jobs:
             },
           };" > src/config.js
 
-      - name: Tests
-        run: npm test
-
       - name: set version
         id: set_version
         run: |
           version=$(date +'%Y%m%d.%H%M%S')
           echo "version=$version" >> "$GITHUB_OUTPUT"
           printf '{"version": "%s" }' "$version" > src/version.json
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Run Tests
+        run: npm test
 
       - name: Update coverage
         run: |
