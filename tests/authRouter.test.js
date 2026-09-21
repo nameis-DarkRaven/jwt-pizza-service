@@ -18,6 +18,8 @@ jest.mock("../src/database/database.js", () => ({
 const { authRouter, setAuthUser } = require("../src/routes/authRouter.js");
 const config = require("../src/config.js");
 
+// Used by the route TODOs below to invoke handlers without starting the server.
+// eslint-disable-next-line no-unused-vars
 function getRouteHandler(method) {
   const layer = authRouter.stack.find(
     (stackLayer) => stackLayer.route?.methods[method],
@@ -37,19 +39,92 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
+function createUser(id, name, email, roles) {
+  return {
+    id: id,
+    name: name,
+    email: email,
+    roles: roles,
+  };
+}
+
+function createDiner() {
+  return createUser(7, "pizza diner", "diner@jwt.com", [{ role: "diner" }]);
+}
+
 describe("setAuthUser", () => {
-  test.todo(
-    "loads a logged-in user from a valid bearer token and adds role lookup",
-  );
-  test.todo(
-    "calls next without setting a user when no Authorization header exists",
-  );
-  test.todo(
-    "calls next without setting a user when the token is not logged in",
-  );
-  test.todo(
-    "clears the user when database validation or JWT verification throws",
-  );
+  test("loads a logged-in user from a valid bearer token and adds role lookup", async () => {
+    const user = createDiner();
+    const token = jwt.sign(user, config.jwtSecret);
+    const request = { headers: { authorization: `Bearer ${token}` } };
+    const response = createResponse();
+    const next = jest.fn();
+    mockDB.isLoggedIn.mockResolvedValue(true);
+
+    await setAuthUser(request, response, next);
+
+    expect(mockDB.isLoggedIn).toHaveBeenCalledWith(token);
+    expect(request.user).toMatchObject(user);
+    expect(request.user.isRole("diner")).toBe(true);
+    expect(request.user.isRole("admin")).toBe(false);
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test("calls next without setting a user when no Authorization header exists", async () => {
+    const request = { headers: {} };
+    const response = createResponse();
+    const next = jest.fn();
+
+    await setAuthUser(request, response, next);
+
+    expect(mockDB.isLoggedIn).not.toHaveBeenCalled();
+    expect(request.user).toBeUndefined();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test("calls next without setting a user when the token is not logged in", async () => {
+    const user = createDiner();
+    const token = jwt.sign(user, config.jwtSecret);
+    const request = { headers: { authorization: `Bearer ${token}` } };
+    const response = createResponse();
+    const next = jest.fn();
+    mockDB.isLoggedIn.mockResolvedValue(false);
+
+    await setAuthUser(request, response, next);
+
+    expect(mockDB.isLoggedIn).toHaveBeenCalledWith(token);
+    expect(request.user).toBeUndefined();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test("clears the user when database validation throws ", async () => {
+    const token = "token";
+    const request = { headers: { authorization: `Bearer ${token}` } };
+    const response = createResponse();
+    const next = jest.fn();
+
+    mockDB.isLoggedIn.mockRejectedValue(new Error("database error"));
+
+    await setAuthUser(request, response, next);
+
+    expect(request.user).toBeNull();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test("clears the user when JWT verification throws", async () => {
+    const token = jwt.sign(createDiner(), "invalid-secret");
+    const request = { headers: { authorization: `Bearer ${token}` } };
+    const response = createResponse();
+    const next = jest.fn();
+
+    mockDB.isLoggedIn.mockResolvedValue(true);
+
+    await setAuthUser(request, response, next);
+
+    expect(mockDB.isLoggedIn).toHaveBeenCalledWith(token);
+    expect(request.user).toBeNull();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("authenticateToken", () => {
