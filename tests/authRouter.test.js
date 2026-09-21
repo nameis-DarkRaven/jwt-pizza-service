@@ -128,8 +128,26 @@ describe("setAuthUser", () => {
 });
 
 describe("authenticateToken", () => {
-  test.todo("returns 401 and unauthorized when req.user is absent");
-  test.todo("calls next when req.user is present");
+  test("returns 401 and unauthorized when req.user is absent", () => {
+    const request = { user: null };
+    const response = createResponse();
+    const next = jest.fn();
+
+    authRouter.authenticateToken(request, response, next);
+
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(response.send).toHaveBeenCalledWith({ message: "unauthorized" });
+    expect(next).not.toHaveBeenCalled();
+  });
+  test("calls next when req.user is present", () => {
+    const request = { user: createDiner() };
+    const response = createResponse();
+    const next = jest.fn();
+
+    authRouter.authenticateToken(request, response, next);
+
+    expect(next).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("POST /api/auth registration", () => {
