@@ -35,10 +35,6 @@ function createResponse() {
   return response;
 }
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 function createUser(id, name, email, roles) {
   return {
     id: id,
@@ -52,13 +48,19 @@ function createDiner() {
   return createUser(7, "pizza diner", "diner@jwt.com", [{ role: "diner" }]);
 }
 
+const register = getRouteHandler("post");
+const response = createResponse();
+const next = jest.fn();
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
 describe("setAuthUser", () => {
   test("loads a logged-in user from a valid bearer token and adds role lookup", async () => {
     const user = createDiner();
     const token = jwt.sign(user, config.jwtSecret);
     const request = { headers: { authorization: `Bearer ${token}` } };
-    const response = createResponse();
-    const next = jest.fn();
     mockDB.isLoggedIn.mockResolvedValue(true);
 
     await setAuthUser(request, response, next);
@@ -72,8 +74,16 @@ describe("setAuthUser", () => {
 
   test("calls next without setting a user when no Authorization header exists", async () => {
     const request = { headers: {} };
-    const response = createResponse();
-    const next = jest.fn();
+
+    await setAuthUser(request, response, next);
+
+    expect(mockDB.isLoggedIn).not.toHaveBeenCalled();
+    expect(request.user).toBeUndefined();
+    expect(next).toHaveBeenCalledTimes(1);
+  });
+
+  test("calls next without setting a user when Authorization header has unexpected format", async () => {
+    const request = { headers: { authorization: "InvalidFormat" } };
 
     await setAuthUser(request, response, next);
 
@@ -86,8 +96,6 @@ describe("setAuthUser", () => {
     const user = createDiner();
     const token = jwt.sign(user, config.jwtSecret);
     const request = { headers: { authorization: `Bearer ${token}` } };
-    const response = createResponse();
-    const next = jest.fn();
     mockDB.isLoggedIn.mockResolvedValue(false);
 
     await setAuthUser(request, response, next);
@@ -100,8 +108,6 @@ describe("setAuthUser", () => {
   test("clears the user when database validation throws ", async () => {
     const token = "token";
     const request = { headers: { authorization: `Bearer ${token}` } };
-    const response = createResponse();
-    const next = jest.fn();
 
     mockDB.isLoggedIn.mockRejectedValue(new Error("database error"));
 
@@ -114,8 +120,6 @@ describe("setAuthUser", () => {
   test("clears the user when JWT verification throws", async () => {
     const token = jwt.sign(createDiner(), "invalid-secret");
     const request = { headers: { authorization: `Bearer ${token}` } };
-    const response = createResponse();
-    const next = jest.fn();
 
     mockDB.isLoggedIn.mockResolvedValue(true);
 
@@ -130,8 +134,6 @@ describe("setAuthUser", () => {
 describe("authenticateToken", () => {
   test("returns 401 and unauthorized when req.user is absent", () => {
     const request = { user: null };
-    const response = createResponse();
-    const next = jest.fn();
 
     authRouter.authenticateToken(request, response, next);
 
@@ -141,8 +143,6 @@ describe("authenticateToken", () => {
   });
   test("calls next when req.user is present", () => {
     const request = { user: createDiner() };
-    const response = createResponse();
-    const next = jest.fn();
 
     authRouter.authenticateToken(request, response, next);
 
