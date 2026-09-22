@@ -118,7 +118,7 @@ describe("setAuthUser", () => {
   });
 
   test("clears the user when JWT verification throws", async () => {
-    const token = jwt.sign(createDiner(), "invalid-secret");
+    const token = jwt.sign(createDiner(), "wrong-secret");
     const request = { headers: { authorization: `Bearer ${token}` } };
 
     mockDB.isLoggedIn.mockResolvedValue(true);
