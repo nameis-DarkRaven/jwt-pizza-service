@@ -151,13 +151,45 @@ describe("authenticateToken", () => {
 });
 
 describe("POST /api/auth registration", () => {
-  test.todo("returns 400 when name is missing");
-  test.todo("returns 400 when email is missing");
-  test.todo("returns 400 when password is missing");
-  test.todo(
-    "adds a diner role, signs in the new user, and returns user plus token",
-  );
-  test.todo("passes database errors to asyncHandler next");
+  test.each([
+    ["name", { email: "test@example.com", password: "password" }],
+    ["email", { name: "pizza diner", password: "password" }],
+    ["password", { name: "pizza diner", email: "test@example.com" }],
+  ])("returns 400 when %s is missing", async (missingField, body) => {
+    const request = { body };
+
+    await register(request, response);
+
+    expect(response.status).toHaveBeenCalledWith(400);
+    expect(response.json).toHaveBeenCalledWith({
+      message: "name, email, and password are required",
+    });
+
+    expect(mockDB.addUser).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
+  test("adds a diner role, signs in the new user, and returns user plus token", async () => {
+    const user = createDiner();
+    const request = {
+      body: { name: user.name, email: user.email, password: "password" },
+    };
+
+    mockDB.addUser.mockResolvedValue(user);
+    mockDB.loginUser.mockResolvedValue(undefined);
+
+    await register(request, response);
+
+    expect(mockDB.addUser).toHaveBeenCalledWith({
+      ...request.body,
+      roles: [{ role: "diner" }],
+    });
+    expect(mockDB.loginUser).toHaveBeenCalledWith(user.id, expect.any(String));
+    expect(response.json).toHaveBeenCalledWith({
+      user: user,
+      token: expect.any(String),
+    });
+    expect(next).not.toHaveBeenCalled();
+  });
 });
 
 describe("PUT /api/auth login", () => {
