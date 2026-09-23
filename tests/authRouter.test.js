@@ -49,6 +49,8 @@ function createDiner() {
 }
 
 const register = getRouteHandler("post");
+const login = getRouteHandler("put");
+const logout = getRouteHandler("delete");
 const response = createResponse();
 const next = jest.fn();
 
@@ -193,8 +195,37 @@ describe("POST /api/auth registration", () => {
 });
 
 describe("PUT /api/auth login", () => {
-  test.todo("gets the user by email and password and returns user plus token");
-  test.todo("passes an unknown-user error to asyncHandler next");
+  test("gets the user by email and password and returns user plus token", async () => {
+    const user = createDiner();
+    const request = {
+      body: { email: user.email, password: "password" },
+    };
+
+    mockDB.getUser.mockResolvedValue(user);
+
+    await login(request, response);
+
+    expect(mockDB.getUser).toHaveBeenCalledWith(user.email, "password");
+    expect(mockDB.loginUser).toHaveBeenCalledWith(user.id, expect.any(String));
+    expect(response.json).toHaveBeenCalledWith({
+      user: user,
+      token: expect.any(String),
+    });
+  });
+  test("passes an unknown user error to next", async () => {
+    const request = {
+      body: { email: "nonexistent@jwt.com", password: "password" },
+    };
+    const error = new Error("unknown user");
+
+    mockDB.getUser.mockRejectedValue(error);
+
+    await login(request, response, next);
+
+    expect(next).toHaveBeenCalledWith(error);
+    expect(response.status).not.toHaveBeenCalled();
+    expect(mockDB.loginUser).not.toHaveBeenCalled();
+  });
 });
 
 describe("DELETE /api/auth logout", () => {
