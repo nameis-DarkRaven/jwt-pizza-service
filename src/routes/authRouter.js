@@ -109,8 +109,8 @@ authRouter.delete(
   "/",
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    message = await clearAuth(req);
-    res.json({ message: message });
+    const message = await clearAuth(req);
+    res.json({ message });
   }),
 );
 
