@@ -229,12 +229,64 @@ describe("PUT /api/auth login", () => {
 });
 
 describe("DELETE /api/auth logout", () => {
-  test.todo("rejects a request without an authenticated user with 401");
-  test.todo("logs out the bearer token and returns the success message");
-  test.todo(
-    "returns success without calling logoutUser when the authenticated request has no token",
-  );
-  test.todo("passes database errors to asyncHandler next");
+  test("rejects a request without an authenticated user with 401", async () => {
+    const request = { user: null };
+
+    await authRouter.authenticateToken(request, response, next);
+
+    expect(response.status).toHaveBeenCalledWith(401);
+    expect(response.send).toHaveBeenCalledWith({ message: "unauthorized" });
+    expect(next).not.toHaveBeenCalled();
+  });
+  test("logs out the bearer token and returns the success message", async () => {
+    const user = createDiner();
+    const token = jwt.sign(user, config.jwtSecret);
+    const request = {
+      user: user,
+      headers: { authorization: `Bearer ${token}` },
+    };
+
+    mockDB.logoutUser.mockResolvedValue(undefined);
+
+    await logout(request, response, next);
+
+    expect(mockDB.logoutUser).toHaveBeenCalledWith(token);
+    expect(response.json).toHaveBeenCalledWith({
+      message: "logout successful",
+    });
+  });
+  test("returns success without calling logoutUser when the authenticated request has no token", async () => {
+    const user = createDiner();
+    const request = {
+      user: user,
+      headers: {},
+    };
+
+    await logout(request, response, next);
+
+    expect(mockDB.logoutUser).not.toHaveBeenCalled();
+    expect(response.json).toHaveBeenCalledWith({
+      message: "logout unsuccessful",
+    });
+  });
+  test("passes database errors to asyncHandler next", async () => {
+    const user = createDiner();
+    const token = jwt.sign(user, config.jwtSecret);
+    const request = {
+      user: user,
+      headers: { authorization: `Bearer ${token}` },
+    };
+    const error = new Error("database error");
+
+    mockDB.logoutUser.mockRejectedValue(error);
+
+    await logout(request, response, next);
+
+    expect(mockDB.logoutUser).toHaveBeenCalledWith(token);
+    expect(next).toHaveBeenCalledWith(error);
+    expect(response.status).not.toHaveBeenCalled();
+    expect(response.json).not.toHaveBeenCalled();
+  });
 });
 
 describe("setAuth", () => {

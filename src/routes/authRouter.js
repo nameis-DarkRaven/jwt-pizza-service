@@ -85,9 +85,9 @@ authRouter.delete(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
-    await clearAuth(req);
-    res.json({ message: 'logout successful' });
-  })
+    message = await clearAuth(req);
+    res.json({ message: message });
+  }),
 );
 
 async function setAuth(user) {
@@ -100,6 +100,9 @@ async function clearAuth(req) {
   const token = readAuthToken(req);
   if (token) {
     await DB.logoutUser(token);
+    return "logout successful";
+  } else {
+    return "logout unsuccessful";
   }
 }
 
