@@ -288,8 +288,3 @@ describe("DELETE /api/auth logout", () => {
     expect(response.json).not.toHaveBeenCalled();
   });
 });
-
-describe("setAuth", () => {
-  test.todo("signs the user JWT, records the token, and returns it");
-  test.todo("propagates loginUser errors");
-});
