@@ -5,10 +5,8 @@ const mockDB = {
 };
 
 describe("GET /me getUser", () => {
+  test.todo("returns the authenticated user from req.user");
   test.todo("rejects a request without an authenticated user with 401");
-  test.todo("get user data from database");
-  test.todo("unauthorized attempt to access user data is rejected");
-  test.todo("returns error when user does not exist");
 });
 
 describe("PUT /:userId updateUser", () => {
@@ -18,7 +16,7 @@ describe("PUT /:userId updateUser", () => {
   );
   test.todo("allows an admin to update another user's account");
   test.todo("returns 403 when a non-admin updates another user's account");
-  test.todo("returns 404 when the requested user does not exist");
+  test.todo("returns 404 when the target user lookup reports no matching user");
   test.todo(
     "forwards updateUser database errors to next without returning success",
   );
