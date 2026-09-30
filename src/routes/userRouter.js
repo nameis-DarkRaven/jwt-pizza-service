@@ -57,7 +57,7 @@ userRouter.put(
     if (user.id !== userId && !user.isRole(Role.Admin)) {
       return res.status(403).json({ message: "unauthorized" });
     }
-    if (!DB.getUser(email, password)) {
+    if (!(await DB.getUser(email, password))) {
       return res.status(404).json({ message: "user not found" });
     }
 
