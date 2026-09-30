@@ -26,8 +26,8 @@ function createDiner(createUserFn = createUser) {
   return createUserFn(7);
 }
 
-function createAdmin(createUserFn = createUser) {
-  return createUserFn(1, [{ role: "admin" }]);
+function createAdmin() {
+  return createAuthenticatedUser(1, [{ role: "admin" }]);
 }
 
 function createFranchisee(createUserFn = createUser) {

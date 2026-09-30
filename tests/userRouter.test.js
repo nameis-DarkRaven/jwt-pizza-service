@@ -3,9 +3,7 @@ const {
   createDiner,
   createAdmin,
   getRouteHandler,
-  getRouteHandlers,
   createAuthenticatedUser,
-  createUser,
 } = require("./testfunctions.js");
 
 const jwt = require("jsonwebtoken");
@@ -94,10 +92,7 @@ describe("PUT /:userId updateUser", () => {
     expect(next).not.toHaveBeenCalled();
   });
   test("allows an admin to update another user's account", async () => {
-    const request = createUpdateUserRequest(
-      7,
-      createAdmin(createAuthenticatedUser),
-    );
+    const request = createUpdateUserRequest(7, createAdmin());
     const updatedUser = {
       ...createDiner(),
       name: request.body.name,
