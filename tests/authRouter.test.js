@@ -1,3 +1,10 @@
+const {
+  createResponse,
+  createDiner,
+  getRouteHandler,
+  createUser,
+} = require("./testfunctions.js");
+
 const jwt = require("jsonwebtoken");
 
 const mockDB = {
@@ -19,38 +26,9 @@ const { authRouter, setAuthUser } = require("../src/routes/authRouter.js");
 const config = require("../src/config.js");
 
 // Used by the route TODOs below to invoke handlers without starting the server.
-// eslint-disable-next-line no-unused-vars
-function getRouteHandler(method) {
-  const layer = authRouter.stack.find(
-    (stackLayer) => stackLayer.route?.methods[method],
-  );
-  return layer.route.stack[layer.route.stack.length - 1].handle;
-}
-
-function createResponse() {
-  const response = {};
-  response.status = jest.fn().mockReturnValue(response);
-  response.send = jest.fn().mockReturnValue(response);
-  response.json = jest.fn().mockReturnValue(response);
-  return response;
-}
-
-function createUser(id, name, email, roles) {
-  return {
-    id: id,
-    name: name,
-    email: email,
-    roles: roles,
-  };
-}
-
-function createDiner() {
-  return createUser(7, "pizza diner", "diner@jwt.com", [{ role: "diner" }]);
-}
-
-const register = getRouteHandler("post");
-const login = getRouteHandler("put");
-const logout = getRouteHandler("delete");
+const register = getRouteHandler(authRouter, "post", "/");
+const login = getRouteHandler(authRouter, "put", "/");
+const logout = getRouteHandler(authRouter, "delete", "/");
 const response = createResponse();
 const next = jest.fn();
 
@@ -60,7 +38,7 @@ beforeEach(() => {
 
 describe("setAuthUser", () => {
   test("loads a logged-in user from a valid bearer token and adds role lookup", async () => {
-    const user = createDiner();
+    const user = createDiner(createUser);
     const token = jwt.sign(user, config.jwtSecret);
     const request = { headers: { authorization: `Bearer ${token}` } };
     mockDB.isLoggedIn.mockResolvedValue(true);
