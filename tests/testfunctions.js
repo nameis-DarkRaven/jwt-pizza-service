@@ -30,8 +30,8 @@ function createAdmin() {
   return createAuthenticatedUser(1, [{ role: "admin" }]);
 }
 
-function createFranchisee(createUserFn = createUser) {
-  return createUserFn(2, [{ role: "franchisee" }]);
+function createFranchisee() {
+  return createAuthenticatedUser(2, [{ role: "franchisee" }]);
 }
 
 function getRouteHandler(router, method, path) {
