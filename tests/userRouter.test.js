@@ -4,7 +4,7 @@ const {
   createAdmin,
   getRouteHandler,
   createAuthenticatedUser,
-} = require("./testfunctions.js");
+} = require("./testFunctions.js");
 
 const jwt = require("jsonwebtoken");
 

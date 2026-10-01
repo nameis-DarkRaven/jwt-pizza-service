@@ -3,7 +3,7 @@ const {
   createDiner,
   getRouteHandler,
   createUser,
-} = require("./testfunctions.js");
+} = require("./testFunctions.js");
 
 const jwt = require("jsonwebtoken");
 

@@ -6,9 +6,7 @@ const {
   createAuthenticatedUser,
   getRouteHandler,
   getRouteHandlers,
-} = require("./testfunctions.js");
-
-const jwt = require("jsonwebtoken");
+} = require("./testFunctions.js");
 
 const mockDB = {
   getFranchises: jest.fn(),
@@ -28,7 +26,6 @@ jest.mock("../src/database/database.js", () => ({
 }));
 
 const franchiseRouter = require("../src/routes/franchiseRouter.js");
-const config = require("../src/config.js");
 
 const getFranchises = getRouteHandler(franchiseRouter, "get", "/");
 const getUserFranchises = getRouteHandler(franchiseRouter, "get", "/:userId");

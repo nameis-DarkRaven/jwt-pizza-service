@@ -4,9 +4,7 @@ const {
   createAdmin,
   createAuthenticatedUser,
   getRouteHandler,
-} = require("./testfunctions.js");
-
-const jwt = require("jsonwebtoken");
+} = require("./testFunctions.js");
 
 const mockDB = {
   addDinerOrder: jest.fn(),
