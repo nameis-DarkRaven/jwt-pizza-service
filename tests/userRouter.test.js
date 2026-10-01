@@ -129,6 +129,23 @@ describe("PUT /:userId updateUser", () => {
     expect(mockDB.loginUser).not.toHaveBeenCalled();
     expect(next).not.toHaveBeenCalled();
   });
+  test("returns 404 when the user lookup returns no user", async () => {
+    const request = createUpdateUserRequest(7);
+
+    mockDB.getUser.mockResolvedValue(null);
+
+    await updateUser(request, response, next);
+
+    expect(mockDB.getUser).toHaveBeenCalledWith(
+      request.body.email,
+      request.body.password,
+    );
+    expect(response.status).toHaveBeenCalledWith(404);
+    expect(response.json).toHaveBeenCalledWith({ message: "user not found" });
+    expect(mockDB.updateUser).not.toHaveBeenCalled();
+    expect(mockDB.loginUser).not.toHaveBeenCalled();
+    expect(next).not.toHaveBeenCalled();
+  });
   test("forwards updateUser database errors to next without returning success", async () => {
     const request = createUpdateUserRequest(7, createAuthenticatedUser(7));
     const error = new Error("Database error");
