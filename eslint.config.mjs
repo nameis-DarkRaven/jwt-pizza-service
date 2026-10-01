@@ -10,7 +10,7 @@ export default defineConfig([
     languageOptions: { globals: globals.node },
   },
   {
-    files: ["**/*.test.js", "**/*.spec.js"],
+    files: ["**/*.test.js", "**/*.spec.js", "tests/**/*.js"],
     languageOptions: {
       globals: {
         ...globals.node,
