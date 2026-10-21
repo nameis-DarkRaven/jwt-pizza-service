@@ -110,22 +110,99 @@ class DB {
   async updateUser(userId, name, email, password) {
     const connection = await this.getConnection();
     try {
+      const updates = [];
       const params = [];
       if (password) {
         const hashedPassword = await bcrypt.hash(password, 10);
-        params.push(`password='${hashedPassword}'`);
+        updates.push("password=?");
+        params.push(hashedPassword);
       }
       if (email) {
-        params.push(`email='${email}'`);
+        updates.push("email=?");
+        params.push(email);
       }
       if (name) {
-        params.push(`name='${name}'`);
+        updates.push("name=?");
+        params.push(name);
       }
-      if (params.length > 0) {
-        const query = `UPDATE user SET ${params.join(", ")} WHERE id=${userId}`;
-        await this.query(connection, query);
+      if (updates.length > 0) {
+        params.push(userId);
+        await this.query(
+          connection,
+          `UPDATE user SET ${updates.join(", ")} WHERE id=?`,
+          params,
+        );
       }
-      return this.getUser(email, password);
+      return await this.getUser(email, password);
+    } finally {
+      connection.end();
+    }
+  }
+
+  async getUsers(page = 1, limit = 10, nameFilter = "*") {
+    const connection = await this.getConnection();
+    try {
+      const offset = (page - 1) * limit;
+      const namePattern = nameFilter.replace(/\*/g, "%");
+      const rows = await this.query(
+        connection,
+        `SELECT id, name, email FROM user WHERE name LIKE ? ORDER BY id LIMIT ? OFFSET ?`,
+        [namePattern, limit + 1, offset],
+      );
+      const more = rows.length > limit;
+      const users = rows.slice(0, limit).map((row) => ({ ...row, roles: [] }));
+
+      if (users.length > 0) {
+        const userIds = users.map((user) => user.id);
+        const placeholders = userIds.map(() => "?").join(", ");
+        const roleRows = await this.query(
+          connection,
+          `SELECT userId, role, objectId FROM userRole WHERE userId IN (${placeholders})`,
+          userIds,
+        );
+        const usersById = new Map(users.map((user) => [user.id, user]));
+        for (const row of roleRows) {
+          usersById.get(row.userId)?.roles.push({
+            role: row.role,
+            objectId: row.objectId || undefined,
+          });
+        }
+      }
+
+      return { users, more };
+    } finally {
+      connection.end();
+    }
+  }
+
+  async deleteUser(userId) {
+    const connection = await this.getConnection();
+    try {
+      await connection.beginTransaction();
+      try {
+        const user = await this.query(
+          connection,
+          "SELECT id FROM user WHERE id=?",
+          [userId],
+        );
+        if (user.length === 0) {
+          await connection.rollback();
+          return false;
+        }
+
+        await this.query(connection, "DELETE FROM auth WHERE userId=?", [
+          userId,
+        ]);
+        await this.query(connection, "DELETE FROM userRole WHERE userId=?", [
+          userId,
+        ]);
+        await this.query(connection, "DELETE FROM user WHERE id=?", [userId]);
+        await connection.commit();
+        return true;
+      } catch (error) {
+        await connection.rollback();
+        throw error;
+      }
     } finally {
       connection.end();
     }
@@ -140,6 +217,15 @@ class DB {
         `INSERT INTO auth (token, userId) VALUES (?, ?) ON DUPLICATE KEY UPDATE token=token`,
         [token, userId],
       );
+    } finally {
+      connection.end();
+    }
+  }
+
+  async logoutUserSessions(userId) {
+    const connection = await this.getConnection();
+    try {
+      await this.query(connection, "DELETE FROM auth WHERE userId=?", [userId]);
     } finally {
       connection.end();
     }
