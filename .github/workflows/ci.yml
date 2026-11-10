@@ -117,7 +117,7 @@ jobs:
               url: 'https://pizza-factory.cs329.click',
               apiKey: '${{ secrets.FACTORY_API_KEY }}',
             },
-          };" > src/config.js
+          };" > config.js
 
       - name: Create OIDC token to AWS
         uses: aws-actions/configure-aws-credentials@v6.3.0
