@@ -37,26 +37,6 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Write config file
-        run: |
-          echo "module.exports = {
-            jwtSecret: 'fake-secret',
-            db: {
-              connection: {
-                host: '127.0.0.1',
-                user: 'root',
-                password: 'tempdbpassword',
-                database: 'pizza',
-                connectTimeout: 60000,
-              },
-              listPerPage: 10,
-            },
-            factory: {
-              url: 'https://pizza-factory.cs329.click',
-              apiKey: 'fake-key',
-            },
-          };" > src/config.js
-
       - name: Tests
         run: npm test
 
@@ -117,7 +97,7 @@ jobs:
               url: 'https://pizza-factory.cs329.click',
               apiKey: '${{ secrets.FACTORY_API_KEY }}',
             },
-          };" > config.js
+          };" > src/config.js
 
       - name: Create OIDC token to AWS
         uses: aws-actions/configure-aws-credentials@v6.3.0
